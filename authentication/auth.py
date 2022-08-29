@@ -4,12 +4,12 @@ Purpose: Define the authorization and authentication processes
 """
 import requests
 import json
-from ml_querier import settings
+from django.conf import settings
+
 
 class app():
     
     def __init__(self):
-        
         self.app_id = settings.APP_ID
         self.client_secret = settings.CLIENT_SECRET
         self.redirect_uri = "https://127.0.0.1:8000/authentication/redirect/"
