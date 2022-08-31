@@ -170,6 +170,7 @@ cython_debug/
 #Information files
 output.json
 info.txt
+shipment_sample.json
 
 # VS CODE configuration files
 launch.json
