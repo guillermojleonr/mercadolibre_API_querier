@@ -1,0 +1,8 @@
+<!-- Currently not in use, don't know how to make it quick to import into another template, right now it is quicker to include these tags directly in each authorization required template-->
+
+{% block user_authentication %}
+    {% if request.user.is_authenticated %}
+    {% else %}
+        <div class="alert alert-danger text-center">No estás autenticado, porfavor loguéate para acceder al sistema</div>
+    {% endif %}
+{% endblock %}

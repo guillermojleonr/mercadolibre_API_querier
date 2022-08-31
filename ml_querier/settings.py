@@ -49,6 +49,8 @@ INSTALLED_APPS = [
     'querier',
     'authentication',
     'sslserver',
+    'user_authentication',
+    'crispy_forms'
 ]
 
 MIDDLEWARE = [
@@ -134,3 +136,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Other env variables
 CLIENT_SECRET = env('CLIENT_SECRET')
 APP_ID = env('APP_ID')
+CLIENTS = env('CLIENTS',cast=list)

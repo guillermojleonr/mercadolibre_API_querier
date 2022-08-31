@@ -1,17 +1,30 @@
 {% extends "main/base.html" %}
 {% load static %}
 
-{% block content %}
-<div style="text-align: center;">
 
-    {% if "valid" in request.GET %}
-        <p style="color: white";>Información enviada correctamente, gracias</p>
-    {% endif %}
+    {% block content %}
     
-    <form action="#" method="POST" style="text-align: center;">
-        {% csrf_token %}
-        <table style="color: white; margin: 20px auto;">{{search_form.as_table}}</table>
-        <input type="submit" value="Enviar" style="width: 150px;">
-    </form>
-</div>
-{% endblock %}
+        {% if request.user.is_authenticated %}
+            
+            <div style="text-align: center;">
+
+                {% if "valid" in request.GET %}
+                    <p style="color: white";>Información enviada correctamente, gracias</p>
+                {% endif %}
+                
+                <form action="#" method="POST" style="text-align: center;">
+                    {% csrf_token %}
+                    <table style="color: white; margin: 20px auto;">{{search_form.as_table}}</table>
+                    <input type="submit" value="Enviar" style="width: 150px;">
+                </form>
+            </div>
+        
+        {% else %}
+            
+            <div class="alert alert-danger text-center">No estás autenticado, porfavor loguéate para acceder al sistema</div>
+        
+        {% endif %}
+
+    {% endblock %}
+
+
