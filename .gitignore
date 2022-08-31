@@ -173,4 +173,4 @@ info.txt
 shipment_sample.json
 
 # VS CODE configuration files
-launch.json
+.vscode
