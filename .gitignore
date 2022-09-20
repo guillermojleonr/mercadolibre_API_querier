@@ -171,6 +171,7 @@ cython_debug/
 output.json
 info.txt
 shipment_sample.json
+.favorites.json
 
 # VS CODE configuration files
 .vscode
