@@ -17,6 +17,8 @@
                     <table style="color: white; margin: 20px auto;">{{search_form.as_table}}</table>
                     <input type="submit" value="Enviar" style="width: 150px;">
                 </form>
+
+                <a href="{% url 'querier_update_shipment' %}" class="button">Consulta informacion adicional</a>
             </div>
         
         {% else %}

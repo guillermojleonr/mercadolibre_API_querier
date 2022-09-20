@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from .forms import SearchForm
 from .models import ScannedPackages
+from querier.querier import ClientQuerier
 import json
 
 def querier_view(request):
@@ -26,7 +27,7 @@ def querier_view(request):
 
             #Send the data to the database
             for tuple in list_of_tuples:
-                data = ScannedPackages(shipment_id=tuple[0],client_id=tuple[1])
+                data = ScannedPackages(shipment_id=tuple[0],client_id_id=tuple[1])
                 data.save()
             
             return redirect("/querier/querier/?valid")
@@ -34,3 +35,9 @@ def querier_view(request):
             return redirect("/querier/querier/?error")
     
     return render(request, "querier/search.html",{"search_form":search_form})
+
+def querier_update_shipment_view(request):
+    cq = ClientQuerier()
+    cq.add_new_shipment_info_to_db()
+    
+    return render(request, "querier/search.html")
