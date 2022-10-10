@@ -12,6 +12,10 @@
                     <p style="color: white";>Información enviada correctamente, gracias</p>
                 {% endif %}
                 
+                {% if "databasemightbelocked" in request.GET %}
+                <p style="color: white";>La base de datos puede estar bloqueada, presiona "atrás" para recuperar la información escaneada</p>
+                {% endif %}
+
                 <form action="#" method="POST" style="text-align: center;">
                     {% csrf_token %}
                     <table style="color: white; margin: 20px auto;">{{search_form.as_table}}</table>

@@ -2,6 +2,7 @@ from main.app import *
 from authentication.models import *
 from querier.models import *
 from datetime import datetime, timezone
+from custom_exceptions import myError
 
 class ClientQuerier(Client,app):
     """ 
@@ -61,37 +62,6 @@ class ClientQuerier(Client,app):
         response = requests.request("GET", url, headers=headers, data=payload)
         response_dictionary = json.loads(response.text)
         return response_dictionary
-    
-    def add_new_shipment_info_to_db(self):
-        sp = ScannedPackages.objects.filter(receiver_address__isnull=True, receiver_name__isnull=True, receiver_phone__isnull=True)
-
-        for shipment in sp:
-            shipment_id = shipment.shipment_id
-            client_id = shipment.client_id_id
-            receiver_address = shipment.receiver_address #NULL by now
-            receiver_name = shipment.receiver_name #NULL by now
-            receiver_phone = shipment.receiver_phone #NULL by now
-
-            #Checking if access_token is active
-            tks = Tokens.objects.filter(client_id_id=client_id)
-            
-            for token in tks:  #Iteration over a 1-row queryset, I don't know a way to get a value from a queryset without iterating over it.
-                access_token = token.access_token
-                refresh_token = token.refresh_token
-
-            #If condition = True, new tokens are requested and updated to db, then shipment_info is requested. If condition = False shipment info is requested.
-            if self.check_lifespan_access_token(access_token) > 21600:
-                new_tokens = self.refresh_token(refresh_token)
-                token_update_operation = self.update_tokens_to_db(new_tokens)
-                print("Token update operation" + token_update_operation)
-                shipment_info = self.get_shipment(access_token,shipment_id)
-
-            else:
-                shipment_info = self.get_shipment(access_token,shipment_id)
-            
-            #New shipment info is updated to db and result is printed, this operation should be logged somewhere.
-            shipment_update_operation = self.update_shipment_info_to_db(shipment_info)
-            print("Shipment update operation" + shipment_update_operation)
             
     def check_lifespan_access_token(self,passed_access_token):
 
@@ -109,8 +79,7 @@ class ClientQuerier(Client,app):
         for token in tks:
             access_token_updated = token.updated
             current_datetime = datetime.now(timezone.utc)
-            time_difference = current_datetime - access_token_updated
-            time_difference = time_difference.seconds
+            time_difference = (current_datetime - access_token_updated).total_seconds()
 
         return time_difference
     
@@ -128,11 +97,12 @@ class ClientQuerier(Client,app):
         
         (obj, created) = Tokens.objects.update_or_create(
         client_id_id = user_id,
-        defaults={'refresh_token':refresh_token,'access_token':access_token}
+        defaults={'refresh_token':refresh_token,'access_token':access_token,'updated':datetime.now(timezone.utc)}
         )
         return (obj,created)
     
     def update_shipment_info_to_db(self,shipment_info):
+
         """ 
         Purpose: updates shipment additional info to the db: receiver name, receiver address and receiver phone
 
@@ -141,16 +111,52 @@ class ClientQuerier(Client,app):
         Output: Tuple containing the query object and confirmation if create operation is succesfull.
         """
         sender_id = shipment_info["sender_id"]
+        id = shipment_info["id"]
         receiver_address = shipment_info["receiver_address"]["address_line"]
         receiver_name = shipment_info["receiver_address"]["receiver_name"]
         receiver_phone = shipment_info["receiver_address"]["receiver_phone"]
         
         (obj, created) = ScannedPackages.objects.update_or_create(
-        client_id_id = sender_id,
+        shipment_id = id,
         defaults={'receiver_address':receiver_address,'receiver_name':receiver_name,'receiver_phone':receiver_phone}
         )
         
         return (obj,created)
+
+    def add_new_shipment_info_to_db(self):
+
+        """ Purpose: Iterates over all shipment records that doesn't have additional information and executes get_shipment and 
+        update_shipment_info_to_db functions in order to store this new information in the DB """
+
+        sp = ScannedPackages.objects.filter(receiver_address__isnull=True, receiver_name__isnull=True, receiver_phone__isnull=True) #queryset
+
+        for shipment in sp:
+            shipment_id = shipment.shipment_id
+            client_id = shipment.client_id_id
+            receiver_address = shipment.receiver_address #NULL by now
+            receiver_name = shipment.receiver_name #NULL by now
+            receiver_phone = shipment.receiver_phone #NULL by now
+
+            #Checking if access_token is active
+            tks = Tokens.objects.filter(client_id_id=client_id)
+            
+            for token in tks:  #Iteration over a 1-row queryset, I don't know how to get a queryset value  without iterating over it.
+                access_token = token.access_token
+                refresh_token = token.refresh_token
+                access_token_lifespan = self.check_lifespan_access_token(access_token)
+
+            if access_token_lifespan > 21600:
+                new_tokens = self.refresh_tokens(refresh_token)
+                token_update_operation = self.update_tokens_to_db(new_tokens)
+                print(token_update_operation)
+                shipment_info = self.get_shipment(access_token,shipment_id)
+
+            else:
+                shipment_info = self.get_shipment(access_token,shipment_id)
+            
+            #New shipment info is updated to db and result is printed, this operation should be logged somewhere.
+            shipment_update_operation = self.update_shipment_info_to_db(shipment_info)
+            print(shipment_update_operation)
 
 
 
