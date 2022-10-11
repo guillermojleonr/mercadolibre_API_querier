@@ -178,3 +178,6 @@ shipment_sample.json
 
 #Testing files
 testing.py
+
+# Python compiled
+*.pyc
