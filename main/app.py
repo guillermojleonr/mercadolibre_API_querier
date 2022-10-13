@@ -10,7 +10,10 @@ class app():
     def __init__(self):
         self.app_id = settings.APP_ID
         self.client_secret = settings.CLIENT_SECRET
-        self.redirect_uri = "https://catcher.onrender.com/authentication/redirect/"
+        if settings.DEVELOPMENT_MODE==True:
+            self.redirect_uri = "https://127.0.0.1:8000/authentication/redirect/"
+        else:
+            self.redirect_uri = "https://catcher.onrender.com/authentication/redirect/"
     
     def exchange_code_to_token(self,code):
         """
