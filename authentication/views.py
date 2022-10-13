@@ -2,6 +2,7 @@ from django.shortcuts import render
 from main.app import *
 from django.conf import settings
 from .models import Client, Tokens
+from querier.querier import ClientQuerier
 # Create your views here.
 
 
@@ -11,7 +12,7 @@ def login_view(request):
 def redirect_view(request):
     # Object instances
     app_instance = app()
-    client_instance = Client()
+    client_instance = ClientQuerier()
     
     get = request.GET
     code = get.__getitem__('code')
