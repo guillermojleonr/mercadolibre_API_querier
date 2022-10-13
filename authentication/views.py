@@ -3,6 +3,7 @@ from main.app import *
 from django.conf import settings
 from .models import Client, Tokens
 from querier.querier import ClientQuerier
+from datetime import datetime, timezone
 # Create your views here.
 
 
@@ -39,7 +40,7 @@ def redirect_view(request):
     #Create or update Tokens.
     Tokens.objects.update_or_create(
     client_id_id = user_id,
-    defaults={'client_id_id':user_id,'refresh_token':refresh_token,'access_token':access_token}
+    defaults={'client_id_id':user_id,'refresh_token':refresh_token,'access_token':access_token,'updated':datetime.now(timezone.utc)}
     )
     
     return render(request, "authentication/redirect.html")
