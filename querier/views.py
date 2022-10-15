@@ -1,44 +1,56 @@
-from sqlite3 import OperationalError
-from django.db.utils import OperationalError
-from django.shortcuts import render, redirect
-from .forms import SearchForm
-from .models import ScannedPackages
-from querier.querier import ClientQuerier
 import json
+
+from django.db.utils import IntegrityError, OperationalError
+from django.shortcuts import redirect, render
+
 from custom_exceptions import myError
+from querier.querier import ClientQuerier
+
+from .forms import SearchForm
+from .models import FailedScannedPackages, ScannedPackages
+
 
 def querier_view(request):
     search_form = SearchForm() # Set Unbound form
     
     if request.method=="POST":
-        try:
-            search_form=SearchForm(data=request.POST) # Set bound form
-            if search_form.is_valid(): #Validation
-                packages=search_form.cleaned_data["packages"] #Get the whole field input.
+        search_form=SearchForm(data=request.POST) # Set bound form
+        if search_form.is_valid(): #Validation
+            packages=search_form.cleaned_data["packages"] #Get the whole field input.
 
-                packages=packages.split() #Split each line into a list of strings
-                
-                #Transform to a list of dictionaries
-                list_of_dictionaries = []
-                for string in packages:
-                    dict = json.loads(string)
-                    list_of_dictionaries.append(dict)
-                
-                #Get only sender_id and shipment_id
-                list_of_tuples = []
-                for dict in list_of_dictionaries:
-                    list_of_tuples.append((dict['id'], dict['sender_id']))
+            packages=packages.split() #Split each line into a list of strings
+            
+            #Transform to a list of dictionaries
+            list_of_dictionaries = []
+            for string in packages:
+                dict = json.loads(string)
+                list_of_dictionaries.append(dict)
+            
+            #Get only sender_id and shipment_id
+            list_of_tuples = []
+            for dict in list_of_dictionaries:
+                list_of_tuples.append((dict['id'], dict['sender_id']))
 
-                #Send the data to the database
-                for tuple in list_of_tuples:
+            #Send the data to the database
+            ie=False
+            for tuple in list_of_tuples:
+                try:
                     data = ScannedPackages(shipment_id=tuple[0],client_id_id=tuple[1])
                     data.save()
+                except IntegrityError:
+                    data = FailedScannedPackages(shipment_id=tuple[0],client_id=tuple[1])
+                    data.save()
+                    ie = True
+                    continue
+                except OperationalError:
+                    return redirect("/querier/querier/?databasemightbelocked")
             
-                return redirect("/querier/querier/?valid")
+            if ie:
+                return redirect("/querier/querier/?integrity_error")
             else:
-                return redirect("/querier/querier/?error")
-        except OperationalError:
-            return redirect("/querier/querier/?databasemightbelocked")
+                return redirect("/querier/querier/?valid")
+        else:
+            return redirect("/querier/querier/?error")
     
     return render(request, "querier/search.html",{"search_form":search_form})
 

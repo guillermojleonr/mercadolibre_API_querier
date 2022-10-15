@@ -11,9 +11,19 @@
                 {% if "valid" in request.GET %}
                     <p style="color: white";>Información enviada correctamente, gracias</p>
                 {% endif %}
+
+                {% if "integrity_error" in request.GET %}
+                <p style="color: white";>Se envió la información correctamente, sin embargo algunos paquetes no pudieron ser registrados, revisa el registro de paquetes fallidos
+                    para ver cuales paquetes no pudieron registrarse correctamente.
+                </p>
+                {% endif %}
                 
                 {% if "databasemightbelocked" in request.GET %}
                 <p style="color: white";>La base de datos puede estar bloqueada, presiona "atrás" para recuperar la información escaneada</p>
+                {% endif %}
+
+                {% if "error" in request.GET %}
+                <p style="color: white";>El formulario no es válido</p>
                 {% endif %}
 
                 <form action="#" method="POST" style="text-align: center;">
