@@ -1,9 +1,11 @@
 """ 
 Purpose: Define the authorization and authentication processes
 """
-import requests
 import json
+
+import requests
 from django.conf import settings
+
 
 class app():
     
@@ -54,3 +56,5 @@ class Developer():
 
         response = requests.request("POST", url, headers=headers, data=payload)
         print(response.text)
+
+

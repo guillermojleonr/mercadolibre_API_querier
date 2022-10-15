@@ -1,8 +1,9 @@
-from main.app import *
-from authentication.models import *
-from querier.models import *
 from datetime import datetime, timezone
-from custom_exceptions import myError
+
+from authentication.models import *
+from main.app import *
+from querier.models import *
+
 
 class ClientQuerier(Client,app):
     """ 
@@ -149,6 +150,11 @@ class ClientQuerier(Client,app):
                 new_tokens = self.refresh_tokens(refresh_token)
                 token_update_operation = self.update_tokens_to_db(new_tokens)
                 print(token_update_operation)
+                new_tks = Tokens.objects.filter(client_id_id=client_id)
+                for token in new_tks:
+                    access_token = token.access_token
+                    refresh_token = token.refresh_token
+                    access_token_lifespan = self.check_lifespan_access_token(access_token)
                 shipment_info = self.get_shipment(access_token,shipment_id)
 
             else:
