@@ -1,14 +1,19 @@
-from django.shortcuts import render
-from main.app import *
-from django.conf import settings
-from .models import Client, Tokens
-from querier.querier import ClientQuerier
 from datetime import datetime, timezone
-# Create your views here.
+
+from django.conf import settings
+from django.shortcuts import render
+
+from main.app import *
+from querier.querier import ClientQuerier
+
+from .models import Client, Tokens
 
 
 def login_view(request):
-    return render(request, "authentication/login.html")
+    app_instance = app()
+    redirect_uri = app_instance.redirect_uri
+    app_id = app_instance.app_id
+    return render(request, "authentication/login.html",{"redirect_uri":redirect_uri,"app_id":app_id})
 
 def redirect_view(request):
     # Object instances

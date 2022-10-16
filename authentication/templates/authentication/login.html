@@ -19,7 +19,7 @@
                 </div>
             </section>
             <p>Para loguearte primero debes iniciar sesión en tu cuenta de mercadolibre</p>
-            <a href="https://auth.mercadolibre.cl/authorization?response_type=code&client_id=1064288210506014&redirect_uri=https://127.0.0.1:8000/authentication/redirect/" class="button primary fit">Login con mercadolibre</a>
+            <a href="https://auth.mercadolibre.cl/authorization?response_type=code&client_id={{app_id}}&redirect_uri={{redirect_uri}}" class="button primary fit">Login con mercadolibre</a>
         </div>
     {% else %}
         <div class="alert alert-danger text-center">No estás autenticado, porfavor loguéate para acceder al sistema</div>
