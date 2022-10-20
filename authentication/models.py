@@ -19,6 +19,6 @@ class Client(models.Model):
 class Tokens(models.Model):
     client_id = models.ForeignKey(Client, on_delete=models.CASCADE, to_field='client_id')
     refresh_token = models.CharField(max_length=50)
-    access_token = models.CharField(max_length=50)
+    access_token = models.CharField(max_length=100)
     created=models.DateTimeField(auto_now_add=True)
     updated=models.DateTimeField(auto_now_add=True)
