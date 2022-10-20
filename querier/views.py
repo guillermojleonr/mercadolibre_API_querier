@@ -1,5 +1,6 @@
 import json
 
+from django.contrib.auth.models import User
 from django.db.utils import IntegrityError, OperationalError
 from django.shortcuts import redirect, render
 
@@ -11,7 +12,7 @@ from .models import FailedScannedPackages, ScannedPackages
 
 
 def querier_view(request):
-    search_form = SearchForm() # Set Unbound form
+    search_form = SearchForm()
     
     if request.method=="POST":
         search_form=SearchForm(data=request.POST) # Set bound form
@@ -33,12 +34,14 @@ def querier_view(request):
 
             #Send the data to the database
             ie=False
+            user = User.objects.get(id=request.user.id)
+            user_id= user.id
             for tuple in list_of_tuples:
                 try:
-                    data = ScannedPackages(shipment_id=tuple[0],client_id_id=tuple[1])
+                    data = ScannedPackages(shipment_id=tuple[0],client_id_id=tuple[1],user_id_id=user_id)
                     data.save()
                 except IntegrityError:
-                    data = FailedScannedPackages(shipment_id=tuple[0],client_id=tuple[1])
+                    data = FailedScannedPackages(shipment_id=tuple[0],client_id=tuple[1],user_id_id=user_id)
                     data.save()
                     ie = True
                     continue

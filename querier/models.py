@@ -1,6 +1,6 @@
-from enum import unique
 from multiprocessing.connection import Client
 
+from django.contrib.auth.models import User
 from django.db import models
 
 from authentication.models import Client
@@ -11,6 +11,7 @@ from main.app import *
 class ScannedPackages(models.Model):
     shipment_id = models.CharField(max_length=50, unique=True)
     client_id = models.ForeignKey(Client, on_delete=models.PROTECT, to_field='client_id')
+    user_id = models.ForeignKey(User, on_delete=models.PROTECT, to_field='id')
     receiver_name = models.CharField(max_length=50, null=True)
     receiver_phone = models.CharField(max_length=50, null=True)
     receiver_address = models.CharField(max_length=50, null=True)
@@ -26,6 +27,7 @@ class ScannedPackages(models.Model):
 class FailedScannedPackages(models.Model):
     shipment_id = models.CharField(max_length=50)
     client_id = models.CharField(max_length=50)
+    user_id = models.ForeignKey(User, on_delete=models.PROTECT, to_field='id')
     receiver_name = models.CharField(max_length=50, null=True)
     receiver_phone = models.CharField(max_length=50, null=True)
     receiver_address = models.CharField(max_length=50, null=True)
