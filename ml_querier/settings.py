@@ -14,42 +14,81 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
-from pathlib import Path
 import os
-import environ
 import sys
-import dj_database_url
+from pathlib import Path
 
+import dj_database_url
+import environ #django-environ top-level module.
+
+# django-environ configuration to set cast and default value, the feature is not being used currently.
 env = environ.Env(
     DEBUG=(bool,False),
 )
 
 # DEVELOPMENT_MODE
-DEVELOPMENT_MODE = os.getenv("DEVELOPMENT_MODE", "False") == "True"
+DEVELOPMENT_MODE = os.getenv("DEVELOPMENT_MODE", "False") == "True" #This comparison is made to cast the string 'True' or 'False' to a boolean type in order to perform python logic operations. The django-environ module has a feature to do this, but I did it the old way.
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Take environment variables from .env file
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
-
-# SECURITY WARNING: keep the secret key used in production secret!
+# SECRET_KEY
 # Raises Django's ImproperlyConfigured exception if SECRET_KEY not in os.environ
 SECRET_KEY = os.getenv('SECRET_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", "False") == "True"
+# Other env variables
+CLIENT_SECRET = os.getenv('CLIENT_SECRET')
+APP_ID = os.getenv('APP_ID')
 
-
-#ALLOWED HOSTS
-if DEVELOPMENT_MODE is True:
+#Local settings
+if DEVELOPMENT_MODE == True:
+    
+    # OverrideTake environment variables from .env file
+    environ.Env.read_env(os.path.join(BASE_DIR, '.env')) 
+    
+    # DEBUG MODE
+    DEBUG = True
+    
+    #ALLOWED_HOSTS
     ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
 
+    #DATABASES
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+        }
+    }
 
-RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS = []
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+    ADMIN = env('ADMIN')
+    
+
+if DEVELOPMENT_MODE == False:
+    DEBUG = os.getenv("DEBUG", "False") == "True"
+
+    #ALLOWED_HOSTS
+    RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+    if RENDER_EXTERNAL_HOSTNAME:
+        ALLOWED_HOSTS = []
+        ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
+    #DATABASES
+    if len(sys.argv) > 0 and sys.argv[1] != 'collectstatic':
+        if os.getenv("DATABASE_URL", None) is None:
+            raise Exception("DATABASE_URL environment variable not defined")
+        DATABASES = {
+            "default": dj_database_url.parse(os.environ.get("DATABASE_URL")),
+        }
+
+    #STATIC FILES
+
+    # Following settings only make sense on production and may break development environments.
+    if not DEBUG:    # Tell Django to copy statics to the `static` directory in your application directory on Render.
+        STATIC_ROOT = os.path.join(BASE_DIR, 'main/static')
+        # Turn on WhiteNoise storage backend that takes care of compressing static files
+        # and creating unique names for each version so they can safely be cached forever.
+        STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 
 # Application definition
 INSTALLED_APPS = [
@@ -99,26 +138,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ml_querier.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/4.1/ref/settings/#databases
-
-
-if DEVELOPMENT_MODE is True:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
-        }
-    }
-elif len(sys.argv) > 0 and sys.argv[1] != 'collectstatic':
-    if os.getenv("DATABASE_URL", None) is None:
-        raise Exception("DATABASE_URL environment variable not defined")
-    DATABASES = {
-        "default": dj_database_url.parse(os.environ.get("DATABASE_URL")),
-    }
-
-
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 
@@ -157,18 +176,63 @@ USE_TZ = True
 # STATIC_URL = '/static/' #absolutepath
 STATIC_URL = 'static/' #relative path
 
-# Following settings only make sense on production and may break development environments.
-if not DEBUG:    # Tell Django to copy statics to the `static` directory in your application directory on Render.
-    STATIC_ROOT = os.path.join(BASE_DIR, 'main/static')
-    # Turn on WhiteNoise storage backend that takes care of compressing static files
-    # and creating unique names for each version so they can safely be cached forever.
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Other env variables
-CLIENT_SECRET = os.getenv('CLIENT_SECRET')
-APP_ID = os.getenv('APP_ID')
+
+# Logging configuration - # Default logging configuration: from django.utils.log
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+
+    #Logging configuration is inherited from default, we only override the following items and
+    #create others for special purposes:
+
+    "filters": {
+        "require_debug_false": {
+            "()": "django.utils.log.RequireDebugFalse",
+        },
+        "require_debug_true": {
+            "()": "django.utils.log.RequireDebugTrue",
+        },
+    },
+
+    'handlers': {
+        "console": {
+            "level": "INFO", #Level redefinition to catch all logs
+            "class": "logging.StreamHandler",
+        },
+
+        "mail_admins": {
+            "level": "ERROR",
+            "filters": ["require_debug_false"],
+            "class": "django.utils.log.AdminEmailHandler",
+        },
+
+        #New testing handler
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': f'{BASE_DIR}/logs/sample_log.log',
+        },
+    },
+
+    'loggers': {
+        #If we override 'console' handler configuration we need to explicitly specify also the logger in order to
+        #make it work.
+        "django": {
+            "handlers": ["console", "mail_admins"],
+            "level": "INFO", #Level redefinition to catch all logs
+        },
+
+        #New testing logger
+        'sample_logger': {
+            'handlers': ['file'],
+            'propagate': True,
+        },
+
+    }
+}
