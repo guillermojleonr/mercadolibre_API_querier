@@ -204,7 +204,7 @@ LOGGING = {
         "console": {
             "level": "INFO", #Level redefinition to catch all logs
             "class": "logging.StreamHandler",
-            'stream': sys.stdout
+            'stream': sys.stdout,
         },
 
         "mail_admins": {
