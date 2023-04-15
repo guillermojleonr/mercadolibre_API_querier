@@ -181,3 +181,6 @@ testing.py
 
 # Python compiled
 *.pyc
+
+#SQL Files
+*.sql

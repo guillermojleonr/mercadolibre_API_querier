@@ -70,6 +70,23 @@ There are multiple configuration and tasks to do to deploy on a remote server. I
 
 The following instructions are for manual deployment on a regular remote server.
 
+Server characteristics: Shared hosting server with cpanel administrator.
+
+Because this is a shared host, we can't run some commands or configure some features from terminal. We need to use cpanel.
+
+* Create a subdomain in the Cpanel "Domains" section. Specify the subdomain name and the root directory it is goint to point.
+
+* Create an "A" DNS record in the Cpanel "Zone Editor" section. Specidy the subdomain name and the host shared IP address. The DNS new "A" records might take hours to propagate you can check it in https://mxtoolbox.com
+
+* Inside the root directory from your new app, create an index.html file with "Hello World" in it.
+
+After a few hours you should see the webpage being served.
+
+
+
+Note: forgive me if this two steps has nothing to do with eachother, I did both.
+
+
 ...
 ...
 
